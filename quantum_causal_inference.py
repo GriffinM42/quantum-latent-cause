@@ -376,6 +376,7 @@ def vn_entropy(p_c):
     """
     eigvals = lin.eig(p_c)[0]
     vn = 0
+    # Should we take the norm or just use the real component?
     for val in eigvals:
         if val != 0:
             vn += -1 * lin.norm(val) * math.log(lin.norm(val), 2)
@@ -533,6 +534,62 @@ def QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, 
     
     return p_xyz, mi_xylz(p_xyz, dx, dy, dz), vn_entropy(tr_xy(p_xyz, dx, dy, dz))
 
+# Common Entropy
+def QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n):
+    """Heuristically calculates the common entropy for the joint state of systems x and y
+
+    Parameters
+    ----------
+    esti_state: matrix
+        The joint density matrix for the estimated state of the observed systems
+    dx: int
+        The dimension of system x
+    dy: int
+        The dimension of system y
+    dz: int
+        The maximum allowed dimension of system z (hidden common cause)
+    penalties: float array
+        An array of penalty values to be used for QLatentSearch trials
+    tolerance: float
+        The threshold of conditional mutual information for a witness to be considered Markovizing
+    smoothing: float
+        The factor to which the estimated state should be smoothed in order to stabilize
+        the density matrix
+    damping: float
+        The damping factor to be used in QLatentSearch
+    log_reg: float
+        The log regularization parameter to be used in QLatentSearch
+    n: int
+        The number of iterations that the QLatentSearch will perform to find a candidate witness
+
+    Returns
+    -------
+    (float, matrix, float, float)
+        - The penalty used in the best iteration of QLatentSearch
+        - A proposed joint density matrix for systems x, y, and z denoting an estimated stable
+        point on the objective function
+        - The conditional mutual information of systems x and y given system z for the proposed
+        joint state
+        - The von Neumann entropy of the proposed system z
+    """
+    # Iterates through penalty values to generate possible witnesses
+    # Note: Assumes penalty values can be repeated, to try multiple randomizations,
+    # and uses a seperate index
+    witnesses = {}
+    index = 0
+    for penalty in penalties:
+        p_xyz, mi, sz = QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, n)
+        witnesses[index] = (penalty, p_xyz, mi, sz)
+        index += 1
+
+    # Finds minimum markovizing entropy value
+    common_entropy = None
+    for witness in witnesses:
+        if (witnesses[witness][2] <= tolerance) and ((common_entropy is None) or (witnesses[witness][3] < common_entropy[3])):
+            common_entropy = witnesses[witness]
+    
+    return common_entropy
+
 # Infer Graph
 #Still need to implement null statistics
 def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n):
@@ -584,30 +641,19 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
     if mi_xy(smooth_esti, dx, dy) <= dep_gate:
         return "not latent (too little dependence)"
     
-    # Iterates through penalty values to generate possible witnesses
-    # Note: Assumes penalty values can be repeated, to try multiple randomizations,
-    # and uses a seperate index
-    witnesses = {}
-    index = 0
-    for penalty in penalties:
-        p_xyz, mi, sz = QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, n)
-        witnesses[index] = (penalty, p_xyz, mi, sz)
-        index += 1
-
-    # Finds minimum markovizing entropy value
-    common_entropy = None
-    for witness in witnesses:
-        if (witnesses[witness][2] <= tolerance) and ((common_entropy is None) or (witnesses[witness][3] < common_entropy)):
-            common_entropy = witnesses[witness][3]
+    # Calculate quantum common entropy
+    common_entropy = QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n)
+    if(common_entropy is not None):
+        print(common_entropy[3])
     
     # Calculate entropy threshold
-    p_x = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=1, axis2=3)
-    p_y = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
     if(extern_thresh is None):
+        p_x = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=1, axis2=3)
+        p_y = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
         extern_thresh = entrop_thresh * min(vn_entropy(p_x), vn_entropy(p_y))
     
     # Determine if threshold is held
-    if (common_entropy is not None) and (common_entropy <= extern_thresh):
+    if (common_entropy is not None) and (common_entropy[3] <= extern_thresh):
         return "latent Markovizing witness"
     else:
         return "not latent (common entropy above threshold)"
