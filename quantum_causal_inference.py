@@ -643,8 +643,6 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
     
     # Calculate quantum common entropy
     common_entropy = QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n)
-    if(common_entropy is not None):
-        print(common_entropy[3])
     
     # Calculate entropy threshold
     if(extern_thresh is None):
@@ -654,9 +652,9 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
     
     # Determine if threshold is held
     if (common_entropy is not None) and (common_entropy[3] <= extern_thresh):
-        return "latent Markovizing witness"
+        return f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
     else:
-        return "not latent (common entropy above threshold)"
+        return f"not latent (common entropy above threshold){f"\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""}"
     
     
 
