@@ -536,8 +536,8 @@ def QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, 
 # Infer Graph
 #Still need to implement null statistics
 def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n):
-    """Heuristically determines the causal structure of two observed quantum systems base on common entropy
-        (the minimum entropy of a Markovizing hidden common cause)
+    """Heuristically infers the causal structure of two observed quantum systems base on common 
+    entropy (the minimum entropy of a Markovizing hidden common cause)
 
     Parameters
     ----------
@@ -611,5 +611,8 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
         return "latent Markovizing witness"
     else:
         return "not latent (common entropy above threshold)"
+    
+    
+
     
     

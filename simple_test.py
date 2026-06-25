@@ -1,14 +1,14 @@
-import latent_search
+import quantum_causal_inference
 import numpy as np
 
-# esti_state = np.array([[0.5, 0, 0,0.5], 
-#                        [0, 0, 0, 0], 
-#                        [0, 0, 0, 0], 
-#                        [0.5, 0, 0, 0.5]])
-esti_state = np.array([[0.25, 0, 0, 0], 
-                       [0, 0.25, 0, 0], 
-                       [0, 0, 0.25, 0], 
-                       [0, 0, 0, 0.25]])
+esti_state = np.array([[0.5, 0, 0, 0.5], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0.5, 0, 0, 0.5]])
+# esti_state = np.array([[0.25, 0, 0, 0], 
+#                        [0, 0.25, 0, 0], 
+#                        [0, 0, 0.25, 0], 
+#                        [0, 0, 0, 0.25]])
 
 dx = 2
 dy = 2
@@ -23,7 +23,7 @@ damping = 0.2
 log_reg = 0.2
 n = 1000
 
-result = latent_search.QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh,
+result = quantum_causal_inference.QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh,
                                    extern_thresh, dep_gate, smoothing, damping, log_reg, n)
 
 print(result)
