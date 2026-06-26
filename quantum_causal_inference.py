@@ -580,18 +580,16 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
     # Iterates through penalty values to generate possible witnesses
     # Note: Assumes penalty values can be repeated, to try multiple randomizations,
     # and uses a seperate index
-    witnesses = {}
-    index = 0
+    witnesses = []
     for penalty in penalties:
         p_xyz, mi, sz = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
-        witnesses[index] = (penalty, p_xyz, mi, sz)
-        index += 1
+        witnesses.append((penalty, p_xyz, mi, sz))
 
     # Finds minimum markovizing entropy value
     common_entropy = None
     for witness in witnesses:
-        if (witnesses[witness][2] <= tolerance) and ((common_entropy is None) or (witnesses[witness][3] < common_entropy[3])):
-            common_entropy = witnesses[witness]
+        if (witness[2] <= tolerance) and ((common_entropy is None) or (witness[3] < common_entropy[3])):
+            common_entropy = witness
     
     return common_entropy
 
@@ -661,7 +659,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     null_stat.sort()
 
     # Determin lower-tail threshold
-    lt_index = math.ceil(len(null_fam)*sig_lvl)-1
+    lt_index = math.floor(len(null_fam)*sig_lvl)
     quantile = null_stat[lt_index] if lt_index < len(null_stat) else None
     
     # Calculate entropy threshold

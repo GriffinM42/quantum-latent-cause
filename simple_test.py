@@ -28,7 +28,7 @@ dep_gate = 0.2
 smoothing = 0.01
 damping = 0.2
 log_reg = 0.2
-n = 1000
+n = 100
 null_fam = [qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = 0.2
 
