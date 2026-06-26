@@ -51,6 +51,14 @@ def exp(A):
     eigvals = np.exp(eigvals)
     return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
 
+# Problem Object
+class QProblem:
+    def __init__(self, esti_state, dx, dy, dz):
+        self.esti_state = esti_state
+        self.dx = dx
+        self.dy = dy
+        self.dz = dz
+
 # Trace Operations
 def tr_x(p_xyz, dx, dy, dz):
     """Traces system x out of p_xyz via partial trace
@@ -592,20 +600,15 @@ def QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damp
 
 # Infer Graph
 #Still need to implement null statistics
-def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n):
+def QInferGraph(problem: QProblem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n, null_fam: list[QProblem], sig_lvl):
     """Heuristically infers the causal structure of two observed quantum systems base on common 
     entropy (the minimum entropy of a Markovizing hidden common cause)
 
     Parameters
     ----------
-    esti_state: matrix
-        The joint density matrix for the estimated state of the observed systems
-    dx: int
-        The dimension of system x
-    dy: int
-        The dimension of system y
-    dz: int
-        The maximum allowed dimension of system z (hidden common cause)
+    problem: QProblem
+        The joint density matrix for the estimated state of the observed systems, the dimensions of systems x and y, and the
+        maximum dimension for system z (hidden common cause)
     penalties: float array
         An array of penalty values to be used for QLatentSearch trials
     tolerance: float
@@ -628,12 +631,21 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
         The log regularization parameter to be used in QLatentSearch
     n: int
         The number of iterations that the QLatentSearch will perform to find a candidate witness
+    null_fam: list[QProblem]
+        Set of null calibration problems
+    sig_lvl: float
+        Lower tail significance level for null calibration
 
     Returns
     -------
     string
         The decision indicating if a possible Markovizing latent variable was found
     """
+    esti_state = problem.esti_state
+    dx = problem.dx
+    dy = problem.dy
+    dz = problem.dz
+    
     # Smooth the estimated state
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
 
@@ -643,6 +655,18 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
     
     # Calculate quantum common entropy
     common_entropy = QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n)
+
+    # Calculate null family
+    null_stat = []
+    for prob in null_fam:
+        c_entrop = QCommonEntropy(prob.esti_state, prob.dx, prob.dy, prob.dz, penalties, tolerance, smoothing, damping, log_reg, n)
+        if c_entrop is not None:
+            null_stat.append(c_entrop[3])
+    null_stat.sort()
+
+    # Determin lower-tail threshold
+    lt_index = math.floor(len(null_fam)*sig_lvl)
+    quantile = null_stat[lt_index] if lt_index < len(null_stat) else None
     
     # Calculate entropy threshold
     if(extern_thresh is None):
@@ -651,7 +675,7 @@ def QInferGraph(esti_state, dx, dy, dz, penalties, tolerance, entrop_thresh, ext
         extern_thresh = entrop_thresh * min(vn_entropy(p_x), vn_entropy(p_y))
     
     # Determine if threshold is held
-    if (common_entropy is not None) and (common_entropy[3] <= extern_thresh):
+    if (common_entropy is not None) and (common_entropy[3] <= extern_thresh) and ((quantile is None) or (common_entropy[3] < quantile)):
         return f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
     else:
         return f"not latent (common entropy above threshold){f"\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""}"
