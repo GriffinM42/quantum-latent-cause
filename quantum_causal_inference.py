@@ -3,7 +3,7 @@ import numpy.linalg as lin
 import math
 
 # Matrix Functions
-def sqrt(A):
+def sqrt(A: np.NDArray[any]):
     """Takes the square root of a matrix
 
     Parameters
@@ -19,7 +19,7 @@ def sqrt(A):
     eigvals = np.sqrt(eigvals)
     return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
 
-def log(A):
+def log(A: np.NDArray[any]):
     """Takes the natural logarithm of a matrix
 
     Parameters
@@ -35,7 +35,7 @@ def log(A):
     eigvals = np.log(eigvals)
     return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
 
-def exp(A):
+def exp(A: np.NDArray[any]):
     """Takes the exponential of a matrix
 
     Parameters
@@ -53,14 +53,14 @@ def exp(A):
 
 # Problem Object
 class QProblem:
-    def __init__(self, esti_state, dx, dy, dz):
+    def __init__(self, esti_state: np.NDArray[any], dx: int, dy: int, dz: int):
         self.esti_state = esti_state
         self.dx = dx
         self.dy = dy
         self.dz = dz
 
 # Trace Operations
-def tr_x(p_xyz, dx, dy, dz):
+def tr_x(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system x out of p_xyz via partial trace
 
     Parameters
@@ -80,7 +80,7 @@ def tr_x(p_xyz, dx, dy, dz):
     """
     return np.reshape(np.trace(p_xyz.reshape(dx, dy, dz, dx, dy, dz), axis1=0, axis2=3), (dy*dz, dy*dz))
 
-def tr_y(p_xyz, dx, dy, dz):
+def tr_y(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system y out of p_xyz via partial trace
 
     Parameters
@@ -100,7 +100,7 @@ def tr_y(p_xyz, dx, dy, dz):
     """
     return np.reshape(np.trace(p_xyz.reshape(dx, dy, dz, dx, dy, dz), axis1=1, axis2=4), (dx*dz, dx*dz))
 
-def tr_z(p_xyz, dx, dy, dz):
+def tr_z(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system z out of p_xyz via partial trace
 
     Parameters
@@ -120,7 +120,7 @@ def tr_z(p_xyz, dx, dy, dz):
     """
     return np.reshape(np.trace(p_xyz.reshape(dx, dy, dz, dx, dy, dz), axis1=2, axis2=5), (dx*dy, dx*dy))
 
-def tr_yz(p_xyz, dx, dy, dz):
+def tr_yz(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system y and z out of p_xyz via partial trace
 
     Parameters
@@ -141,7 +141,7 @@ def tr_yz(p_xyz, dx, dy, dz):
     p_xy = tr_z(p_xyz, dx, dy, dz)
     return np.reshape(np.trace(p_xy.reshape(dx, dy, dx, dy), axis1=1, axis2=3), (dx, dx))
 
-def tr_xz(p_xyz, dx, dy, dz):
+def tr_xz(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system x and z out of p_xyz via partial trace
 
     Parameters
@@ -162,7 +162,7 @@ def tr_xz(p_xyz, dx, dy, dz):
     p_xy = tr_z(p_xyz, dx, dy, dz)
     return np.reshape(np.trace(p_xy.reshape(dx, dy, dx, dy), axis1=0, axis2=2), (dy, dy))
 
-def tr_xy(p_xyz, dx, dy, dz):
+def tr_xy(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Traces system x and y out of p_xyz via partial trace
 
     Parameters
@@ -184,7 +184,7 @@ def tr_xy(p_xyz, dx, dy, dz):
     return np.reshape(np.trace(p_xz.reshape(dx, dz, dx, dz), axis1=0, axis2 = 2), (dz, dz))
 
 # Conditional State Calculations
-def get_zlx(p_xyz, dx, dy, dz):
+def get_zlx(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Calculates the conditional state of z given x (p_zlx)
 
     Parameters
@@ -206,7 +206,7 @@ def get_zlx(p_xyz, dx, dy, dz):
     proj = np.kron(lin.pinv(sqrt(tr_yz(p_xyz, dx, dy, dz))), np.eye(dz))
     return np.matmul(np.matmul(proj, p_xz), proj)
 
-def get_zly(p_xyz, dx, dy, dz):
+def get_zly(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Calculates the conditional state of z given y (p_zly)
 
     Parameters
@@ -229,7 +229,7 @@ def get_zly(p_xyz, dx, dy, dz):
     return np.matmul(np.matmul(proj, p_yz), proj)
     
 # Regularized Marginal Calculations
-def R_c(p_cz, dc, dz, log_reg):
+def R_c(p_cz: np.NDArray[any], dc: int, dz: int, log_reg: float):
     """Mixes p_cz with a uniform distribution on z by a factor of the log regularization parameter
 
     Parameters
@@ -250,7 +250,7 @@ def R_c(p_cz, dc, dz, log_reg):
     """
     return ((1-log_reg) * p_cz) + (log_reg * np.kron(np.eye(dc), np.eye(dz)/dz))
 
-def R_z(p_z, dz, log_reg):
+def R_z(p_z: np.NDArray[any], dz: int, log_reg: float):
     """Mixes p_z with a uniform distribution on z by a factor of the log regularization parameter
 
     Parameters
@@ -270,7 +270,7 @@ def R_z(p_z, dz, log_reg):
     return ((1-log_reg) * p_z) + (log_reg/dz * np.eye(dz))
 
 # Lifted Operators
-def L_x(A, dx, dy, dz):
+def L_x(A: np.NDArray[any], dx: int, dy: int, dz: int):
     """Lifts a state z|x to xyz by tensoring with the identity on y
 
     Parameters
@@ -308,7 +308,7 @@ def L_x(A, dx, dy, dz):
 
     return A_2
 
-def L_y(A, dx):
+def L_y(A: np.NDArray[any], dx: int):
     """Lifts a state z|y to xyz by tensoring with the identity on x
 
     Parameters
@@ -325,7 +325,7 @@ def L_y(A, dx):
     """
     return np.kron(np.eye(dx), A)
 
-def L_z(A, dx, dy):
+def L_z(A: np.NDArray[any], dx: int, dy: int):
     """Lifts a state z to xyz by tensoring with the identity on x and y
 
     Parameters
@@ -345,7 +345,7 @@ def L_z(A, dx, dy):
     return np.kron(np.eye(dx*dy), A)
 
 # Conditional Normalization
-def condit_norm(R, dx, dy, dz):
+def condit_norm(R: np.NDArray[any], dx: int, dy: int, dz: int):
     """Calculates the conditional state of system z given systems x and y
 
     Parameters
@@ -369,7 +369,7 @@ def condit_norm(R, dx, dy, dz):
     return np.matmul(np.matmul(proj, R), proj)
 
 # Entropy and Mutual Information Calculations
-def vn_entropy(p_c):
+def vn_entropy(p_c: np.NDArray[any]):
     """Calculates von Neumann entropy of system c
 
     Parameters
@@ -391,7 +391,7 @@ def vn_entropy(p_c):
     
     return vn
 
-def mi_xy(p_xy, dx, dy):
+def mi_xy(p_xy: np.NDArray[any], dx: int, dy: int):
     """Calculates the mutual information of systems x and y
 
     Parameters
@@ -413,7 +413,7 @@ def mi_xy(p_xy, dx, dy):
 
     return vn_entropy(p_x) + vn_entropy(p_y) - vn_entropy(p_xy)
 
-def mi_xylz(p_xyz, dx, dy, dz):
+def mi_xylz(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
     """Calculates the conditional mutual information of systems x and y given system z
 
     Parameters
@@ -440,7 +440,7 @@ def mi_xylz(p_xyz, dx, dy, dz):
     return vn_xz + vn_yz - vn_z - vn_xyz
 
 # Random Conditional Operator Initialization
-def initC(dx, dy, dz):
+def initC(dx: int, dy: int, dz: int):
     """Generates a pseudo random positive operator C such that C is positive semidefinite and
     tracing out system z results in the identity over systems x and y
 
@@ -473,7 +473,7 @@ def initC(dx, dy, dz):
     return np.matmul(np.matmul(proj, A), proj)
 
 # Latent Search
-def QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, n):
+def QLatentSearch(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, smoothing: float, damping: float, log_reg: float, penalty: float, n: int):
     """Heuristically searches for a stable point of the trade-off between the von Neumann
     entropy of the hidden common cause and mutual information between the two observed systems
 
@@ -543,7 +543,8 @@ def QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, 
     return p_xyz, mi_xylz(p_xyz, dx, dy, dz), vn_entropy(tr_xy(p_xyz, dx, dy, dz))
 
 # Common Entropy
-def QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n):
+def QCommonEntropy(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, penalties: list[float], tolerance: float, smoothing: float, damping: float,
+                    log_reg: float, n: int):
     """Heuristically calculates the common entropy for the joint state of systems x and y
 
     Parameters
@@ -599,8 +600,8 @@ def QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damp
     return common_entropy
 
 # Infer Graph
-#Still need to implement null statistics
-def QInferGraph(problem: QProblem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n, null_fam: list[QProblem], sig_lvl):
+def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
+                 smoothing: float, damping: float, log_reg: float, n: int, null_fam: list[QProblem], sig_lvl: float):
     """Heuristically infers the causal structure of two observed quantum systems base on common 
     entropy (the minimum entropy of a Markovizing hidden common cause)
 
