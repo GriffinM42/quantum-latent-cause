@@ -473,20 +473,15 @@ def initC(dx: int, dy: int, dz: int):
     return np.matmul(np.matmul(proj, A), proj)
 
 # Latent Search
-def QLatentSearch(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, smoothing: float, damping: float, log_reg: float, penalty: float, n: int):
+def QLatentSearch(problem: QProblem, smoothing: float, damping: float, log_reg: float, penalty: float, n: int):
     """Heuristically searches for a stable point of the trade-off between the von Neumann
     entropy of the hidden common cause and mutual information between the two observed systems
 
     Parameters
     ----------
-    esti_state: matrix
-        The joint density matrix for the estimated state of the observed systems
-    dx: int
-        The dimension of system x
-    dy: int
-        The dimension of system y
-    dz: int
-        The maximum allowed dimension of system z (hidden common cause)
+    problem: QProblem
+        The joint density matrix for the estimated state of the observed systems, the dimensions of systems x and y, and the
+        maximum dimension for system z (hidden common cause)
     smoothing: float
         The factor to which the estimated state should be smoothed in order to stabilize
         the density matrix
@@ -510,6 +505,11 @@ def QLatentSearch(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, smooth
         joint state
         - The von Neumann entropy of the proposed system z
     """
+    esti_state = problem.esti_state
+    dx = problem.dx
+    dy = problem.dy
+    dz = problem.dz
+
     # Smooth the estimated state
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
 
@@ -543,20 +543,15 @@ def QLatentSearch(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, smooth
     return p_xyz, mi_xylz(p_xyz, dx, dy, dz), vn_entropy(tr_xy(p_xyz, dx, dy, dz))
 
 # Common Entropy
-def QCommonEntropy(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, penalties: list[float], tolerance: float, smoothing: float, damping: float,
+def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, smoothing: float, damping: float,
                     log_reg: float, n: int):
     """Heuristically calculates the common entropy for the joint state of systems x and y
 
     Parameters
     ----------
-    esti_state: matrix
-        The joint density matrix for the estimated state of the observed systems
-    dx: int
-        The dimension of system x
-    dy: int
-        The dimension of system y
-    dz: int
-        The maximum allowed dimension of system z (hidden common cause)
+    problem: QProblem
+        The joint density matrix for the estimated state of the observed systems, the dimensions of systems x and y, and the
+        maximum dimension for system z (hidden common cause)
     penalties: float array
         An array of penalty values to be used for QLatentSearch trials
     tolerance: float
@@ -581,13 +576,14 @@ def QCommonEntropy(esti_state: np.NDArray[any], dx: int, dy: int, dz: int, penal
         joint state
         - The von Neumann entropy of the proposed system z
     """
+
     # Iterates through penalty values to generate possible witnesses
     # Note: Assumes penalty values can be repeated, to try multiple randomizations,
     # and uses a seperate index
     witnesses = {}
     index = 0
     for penalty in penalties:
-        p_xyz, mi, sz = QLatentSearch(esti_state, dx, dy, dz, smoothing, damping, log_reg, penalty, n)
+        p_xyz, mi, sz = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
         witnesses[index] = (penalty, p_xyz, mi, sz)
         index += 1
 
@@ -645,7 +641,6 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     esti_state = problem.esti_state
     dx = problem.dx
     dy = problem.dy
-    dz = problem.dz
     
     # Smooth the estimated state
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
@@ -655,18 +650,18 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         return "not latent (too little dependence)"
     
     # Calculate quantum common entropy
-    common_entropy = QCommonEntropy(esti_state, dx, dy, dz, penalties, tolerance, smoothing, damping, log_reg, n)
+    common_entropy = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
 
     # Calculate null family
     null_stat = []
     for prob in null_fam:
-        c_entrop = QCommonEntropy(prob.esti_state, prob.dx, prob.dy, prob.dz, penalties, tolerance, smoothing, damping, log_reg, n)
+        c_entrop = QCommonEntropy(prob, penalties, tolerance, smoothing, damping, log_reg, n)
         if c_entrop is not None:
             null_stat.append(c_entrop[3])
     null_stat.sort()
 
     # Determin lower-tail threshold
-    lt_index = math.floor(len(null_fam)*sig_lvl)
+    lt_index = math.ceil(len(null_fam)*sig_lvl)-1
     quantile = null_stat[lt_index] if lt_index < len(null_stat) else None
     
     # Calculate entropy threshold
