@@ -1,5 +1,6 @@
 import quantum_causal_inference as qci
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Pure State (00 Bell State)
 esti_state1 = np.array([[0.5, 0, 0, 0.5], 
@@ -24,7 +25,7 @@ dz = 2
 problem = qci.QProblem(esti_state3, dx, dy, dz)
 
 # penalties = [0, 0.1, 0.5, 0.8, 1, 1.5, 2, 3]
-penalties = np.arange(0, 100) / 100
+penalties = np.arange(0, 1000) / 1000
 tolerance = 0.2
 entrop_thresh = 0.8
 extern_thresh = 1
@@ -41,9 +42,12 @@ result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_th
                          smoothing, damping, log_reg, n, null_fam, sig_lvl)
 
 print(result.result_message)
-print(result.candidate_entropies[0][3])
 
+entropies_list = []
+for candidate in result.candidate_entropies:
+    entropies_list.append(candidate[3])
 
+entropies_list.sort(reverse=True)
 
-
-
+plt.plot(np.arange(len(entropies_list)), entropies_list, 'ro')
+plt.show()

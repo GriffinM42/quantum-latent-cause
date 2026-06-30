@@ -51,13 +51,18 @@ def exp(A: np.NDArray[any]):
     eigvals = np.exp(eigvals)
     return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
 
-# Problem Object
+# Related Objects
 class QProblem:
     def __init__(self, esti_state: np.NDArray[any], dx: int, dy: int, dz: int):
         self.esti_state = esti_state
         self.dx = dx
         self.dy = dy
         self.dz = dz
+
+class QGraphResult:
+    def __init__(self, result_message: str, candidate_entropies: list[tuple[float, np.ndarray[any], float, float]]):
+        self.result_message = result_message
+        self.candidate_entropies = candidate_entropies
 
 # Trace Operations
 def tr_x(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
@@ -568,13 +573,16 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
 
     Returns
     -------
-    (float, matrix, float, float)
+    tuple[float, matrix, float, float]
         - The penalty used in the best iteration of QLatentSearch
         - A proposed joint density matrix for systems x, y, and z denoting an estimated stable
         point on the objective function
         - The conditional mutual information of systems x and y given system z for the proposed
         joint state
         - The von Neumann entropy of the proposed system z
+    list[tuple[float, matrix, float, float]]
+        - A list of tuples representing all possible markovizing candidates, including the common
+        entropy
     """
 
     # Iterates through penalty values to generate possible witnesses
@@ -587,11 +595,15 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
 
     # Finds minimum markovizing entropy value
     common_entropy = None
+    candidates = []
     for witness in witnesses:
-        if (witness[2] <= tolerance) and ((common_entropy is None) or (witness[3] < common_entropy[3])):
-            common_entropy = witness
+        if (witness[2] <= tolerance):
+            candidates.append(witness)
+            if((common_entropy is None) or (witness[3] < common_entropy[3])):
+                common_entropy = witness
+    candidates.sort(key=lambda x:x[3])
     
-    return common_entropy
+    return common_entropy, candidates
 
 # Infer Graph
 def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
@@ -633,27 +645,31 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
 
     Returns
     -------
-    string
-        The decision indicating if a possible Markovizing latent variable was found
+    QGraphResult
+        The decision indicating if a possible Markovizing latent variable was found, as well as
+        other candidate Markovizing witnesses
     """
     esti_state = problem.esti_state
     dx = problem.dx
     dy = problem.dy
+
+    result_message = ""
     
     # Smooth the estimated state
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
 
     # Check if x and y have enough correlation to need explanation
     if mi_xy(smooth_esti, dx, dy) <= dep_gate:
-        return "not latent (too little dependence)"
+        result_message = "not latent (too little dependence)"
+        return QGraphResult(result_message, None)
     
     # Calculate quantum common entropy
-    common_entropy = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
+    common_entropy, candidates = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
 
     # Calculate null family
     null_stat = []
     for prob in null_fam:
-        c_entrop = QCommonEntropy(prob, penalties, tolerance, smoothing, damping, log_reg, n)
+        c_entrop = QCommonEntropy(prob, penalties, tolerance, smoothing, damping, log_reg, n)[0]
         if c_entrop is not None:
             null_stat.append(c_entrop[3])
     null_stat.sort()
@@ -670,10 +686,11 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     
     # Determine if threshold is held
     if (common_entropy is not None) and (common_entropy[3] <= extern_thresh) and ((quantile is None) or (common_entropy[3] < quantile)):
-        return f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
+        result_message =  f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
     else:
-        return f"not latent (common entropy above threshold){f"\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""}"
+        result_message =  f"not latent (common entropy above threshold){f"\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""}"
     
+    return QGraphResult(result_message, candidates)
     
 
     
