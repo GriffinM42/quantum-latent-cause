@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 A = np.zeros((64, 64))
 
-q = 0.5
-p1 = 0.4
-p2 = 0.3
+q = 0.4
+p1 = 0.1
+p2 = 0.2
 
 for x in range(0, 4):
     for y in range(0, 4):
@@ -35,12 +35,12 @@ problem = qci.QProblem(prob, dx, dy, dz)
 penalties = np.arange(0, 100) / 100
 tolerance = 0.05
 entrop_thresh = 0.8
-extern_thresh = 1
-dep_gate = 0.001
+extern_thresh = None
+dep_gate = 0
 smoothing = 0.01
 damping = 0.2
 log_reg = 0.2
-n = 100
+n = 1000
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = 0.2

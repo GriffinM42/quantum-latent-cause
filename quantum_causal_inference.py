@@ -659,7 +659,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
 
     # Check if x and y have enough correlation to need explanation
-    if mi_xy(smooth_esti, dx, dy) <= dep_gate:
+    if abs(mi_xy(smooth_esti, dx, dy)) <= dep_gate:
         result_message = "not latent (too little dependence)"
         return QGraphResult(result_message, None)
     
