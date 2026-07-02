@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\\Causal Inference\\quantum-latent-cause')
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -43,6 +46,7 @@ def objective(trial):
     smoothing = trial.suggest_float('smoothing', 0, 1)
     damping = trial.suggest_float('damping', 0, 1)
     log_reg = trial.suggest_float('log_reg', 0, 1)
+    
     n = trial.suggest_int('n', 10, 1000)
     sig_lvl = trial.suggest_float('sig_lvl', 0, 1)
 
