@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(1, '../')
+sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\\Causal Inference\\quantum-latent-cause')
 
 import quantum_causal_inference as qci
 import numpy as np
