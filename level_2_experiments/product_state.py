@@ -41,7 +41,7 @@ print(esti_state)
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = np.arange(0.0, 1.0, 0.01)
-tolerance = 0.2
+tolerance = 0.05
 entrop_thresh = 0.8
 extern_thresh = None
 dep_gate = 0.2

@@ -13,8 +13,6 @@ from qiskit_experiments.library import StateTomography
 import numpy as np
 import numpy.linalg as lin
 
-service = QiskitRuntimeService()
-
 def get_bell_00():
     q = QuantumRegister(2)
     b = ClassicalRegister(2)
@@ -24,6 +22,7 @@ def get_bell_00():
     return circ
 
 def tomo_circ(get_circ):
+    service = QiskitRuntimeService()
     backend = service.least_busy(simulator=False, operational=True)
     exp = StateTomography(get_circ())
     data = exp.run(backend=backend, seed_simulation=1000).block_for_results()
@@ -42,7 +41,7 @@ print(esti_state)
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = np.arange(0.0, 1.0, 0.01)
-tolerance = 0.2
+tolerance = 0.05
 entrop_thresh = 0.8
 extern_thresh = None
 dep_gate = 0.2

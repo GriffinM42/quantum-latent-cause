@@ -3,6 +3,8 @@ sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\
 
 import quantum_causal_inference as qci
 
+from qiskit_ibm_runtime import QiskitRuntimeService
+
 from qiskit import QuantumCircuit
 from qiskit.circuit import QuantumRegister, ClassicalRegister
 from qiskit_experiments.library import StateTomography
@@ -11,7 +13,6 @@ from qiskit_aer import AerSimulator
 from qiskit.primitives import BackendSamplerV2
 
 import numpy as np
-import numpy.linalg as lin
 
 def get_ghz_3():
     q = QuantumRegister(3)
@@ -23,11 +24,11 @@ def get_ghz_3():
     return circ
 
 def tomo_circ(get_circ):
-    aer = AerSimulator()
+    service = QiskitRuntimeService()
+    backend = service.least_busy(simulator=False, operational=True)
     exp = StateTomography(get_circ())
-    data = exp.run(backend=aer, seed_simulation=10000).block_for_results()
+    data = exp.run(backend=backend, seed_simulation=10000).block_for_results()
     df = data.analysis_results(dataframe=True)
-    # x = df[df['name'] == 'state']['value']
     p_xy = df['value'].values[0].data
     return qci.tr_z(p_xy, 2, 2, 2)
 
