@@ -43,8 +43,8 @@ entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
 dep_gate = ih.dep_gate
 smoothing = ih.smoothing
-damping = 0.6962200606112787
-log_reg = 0.007043188253465324
+damping = ih.damping_ghz
+log_reg = ih.log_reg_ghz
 n = ih.n
 
 null_fam = []

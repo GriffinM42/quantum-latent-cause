@@ -3,6 +3,7 @@ sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\
 
 import numpy as np
 import lib.quantum_causal_inference as qci
+import lib.inference_hyperparams as ih
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -37,18 +38,18 @@ dy = 4
 dz = 4
 
 
-penalties = np.arange(0, 10) / 10
-tolerance = 0.05
-entrop_thresh = 0.9
-extern_thresh = None
-dep_gate = 0
-smoothing = 0.01
-damping = 0.9396656310614254
-log_reg = 0.009754753112145118
-n = 100
+penalties = ih.penalties
+tolerance = ih.tolerance
+entrop_thresh = ih.entrop_thresh
+extern_thresh = ih.extern_thresh
+dep_gate = ih.dep_gate
+smoothing = ih.smoothing
+damping = ih.damping_noisy_lat
+log_reg = ih.log_reg_noisy_lat
+n = ih.n
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
-sig_lvl = 0.2
+sig_lvl = ih.sig_lvl
 
 
 results = []

@@ -3,6 +3,7 @@ sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\
 
 import optuna
 import lib.quantum_causal_inference as qci
+import lib.inference_hyperparams as ih
 import numpy as np
 
 A = np.zeros((64, 64))
@@ -29,17 +30,17 @@ dx = 4
 dy = 4
 dz = 4
 
-penalties = np.arange(0.0, 1.0, 0.01)
+penalties = ih.penalties
 
-smoothing = 0.2
-tolerance = 0.05
-dep_gate = 0.01
-extern_thresh = None
-entrop_thresh = 0.8
+smoothing = ih.smoothing
+tolerance = ih.tolerance
+dep_gate = ih.dep_gate
+extern_thresh = ih.extern_thresh
+entrop_thresh = ih.entrop_thresh
 
-n = 100
+n = ih.n
 
-sig_lvl = 0.2
+sig_lvl = ih.sig_lvl
 
 problem = qci.QProblem(prob, dx, dy, dz)
 
