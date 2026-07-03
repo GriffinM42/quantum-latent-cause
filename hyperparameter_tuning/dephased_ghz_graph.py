@@ -29,16 +29,16 @@ problem = qci.QProblem(esti_state3, dx, dy, dz)
 
 # penalties = [0, 0.1, 0.5, 0.8, 1, 1.5, 2, 3]
 penalties = np.arange(0, 1000) / 1000
-tolerance = 0.2
-entrop_thresh = 0.8
-extern_thresh = 1
+tolerance = 0.05
+entrop_thresh = 0.9
+extern_thresh = None
 dep_gate = 0.2
 smoothing = 0.01
-damping = 0.2
-log_reg = 0.2
+damping = 0.6962200606112787
+log_reg = 0.007043188253465324
 n = 100
 
-null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
+null_fam = [qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = 0.2
 
 result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 

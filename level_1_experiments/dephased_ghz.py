@@ -16,13 +16,13 @@ esti_state = np.array([[0.5, 0, 0, 0],
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = np.arange(0.0, 1.0, 0.01)
-tolerance = 0.2
-entrop_thresh = 0.8
+tolerance = 0.05
+entrop_thresh = 0.9
 extern_thresh = None
-dep_gate = 0.2
-smoothing = 0.01
-damping = 0.2
-log_reg = 0.2
+dep_gate = 0.01
+smoothing = 0.2
+damping = 0.6962200606112787
+log_reg = 0.007043188253465324
 n = 1000
 
 null_fam = []

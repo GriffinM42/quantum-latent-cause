@@ -29,7 +29,7 @@ def get_xyz(q, p1, p2):
                 A[x*16 + y*4 + z][x*16 + y*4 + z] = prod
     return A
 
-x = get_xyz(0.4, 0.3, 0.2)
+# x = get_xyz(0.4, 0.3, 0.2)
 # print(qci.mi_xy(qci.tr_z(x, 4, 4, 4), 4, 4))
 
 dx = 4
@@ -38,13 +38,13 @@ dz = 4
 
 
 penalties = np.arange(0, 10) / 10
-tolerance = 0.2
-entrop_thresh = 0.8
+tolerance = 0.05
+entrop_thresh = 0.9
 extern_thresh = None
 dep_gate = 0
 smoothing = 0.01
-damping = 0.2
-log_reg = 0.2
+damping = 0.9396656310614254
+log_reg = 0.009754753112145118
 n = 100
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
@@ -60,7 +60,6 @@ for i in range(len(p1_vals)):
         problem = qci.QProblem(qci.tr_z(get_xyz(q, p1_vals[i], p2_vals[j]), dx, dy, dz), dx, dy, dz)
         res = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
                          smoothing, damping, log_reg, n, null_fam, sig_lvl).result_message
-        print(res)
         if accurate_result == res[:len(accurate_result)]:
             results[i].append('T')
         else:
@@ -79,4 +78,4 @@ tbl = plt.subplot(111, frame_on=False)
 tbl.xaxis.set_visible(False)
 tbl.yaxis.set_visible(False)
 table(tbl, df, loc="center")
-plt.savefig("mytable.png")
+plt.savefig("noisy_latent_accuracy.png")

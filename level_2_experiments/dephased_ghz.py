@@ -47,8 +47,8 @@ entrop_thresh = 0.8
 extern_thresh = None
 dep_gate = 0.2
 smoothing = 0.01
-damping = 0.2
-log_reg = 0.2
+damping = 0.6962200606112787
+log_reg = 0.007043188253465324
 n = 100
 
 null_fam = []
