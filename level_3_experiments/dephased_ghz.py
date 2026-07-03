@@ -1,16 +1,14 @@
 import sys
 sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\\Causal Inference\\quantum-latent-cause')
 
-import quantum_causal_inference as qci
+import lib.quantum_causal_inference as qci
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+import lib.inference_hyperparams as ih
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import QuantumRegister, ClassicalRegister
 from qiskit_experiments.library import StateTomography
-
-from qiskit_aer import AerSimulator
-from qiskit.primitives import BackendSamplerV2
 
 import numpy as np
 
@@ -42,18 +40,18 @@ print(esti_state)
 
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
-penalties = np.arange(0.0, 1.0, 0.01)
-tolerance = 0.05
-entrop_thresh = 1
-extern_thresh = None
-dep_gate = 0.2
-smoothing = 0.01
+penalties = ih.penalties
+tolerance = ih.tolerance
+entrop_thresh = ih.entrop_thresh
+extern_thresh = ih.extern_thresh
+dep_gate = ih.dep_gate
+smoothing = ih.smoothing
 damping = 0.6962200606112787
 log_reg = 0.007043188253465324
-n = 100
+n = ih.n
 
 null_fam = []
-sig_lvl = 0.2
+sig_lvl = ih.sig_lvl
 
 result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
                          smoothing, damping, log_reg, n, null_fam, sig_lvl)

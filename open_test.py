@@ -1,5 +1,5 @@
 import numpy as np
-import quantum_causal_inference as qci
+import lib.quantum_causal_inference as qci
 import matplotlib.pyplot as plt
 
 A = np.zeros((64, 64))

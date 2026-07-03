@@ -1,4 +1,4 @@
-import quantum_causal_inference as qci
+import lib.quantum_causal_inference as qci
 import numpy as np
 
 # Pure State (00 Bell State)
