@@ -54,4 +54,5 @@ for candidate in result.candidate_entropies:
 entropies_list.sort(reverse=True)
 
 plt.plot(np.arange(len(entropies_list)), entropies_list, 'ro')
+plt.savefig("dephased_ghz_entropies.png")
 plt.show()

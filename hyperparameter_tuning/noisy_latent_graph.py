@@ -10,10 +10,8 @@ import pandas as pd
 from pandas.plotting import table
 
 q = 0.4
-p1_vals = np.arange(0.1, 1.0, 0.1).round(decimals=1)
-p2_vals = np.arange(0.1, 1.0, 0.1).round(decimals=1)
-
-accurate_result = "latent Markovizing witness"
+p1 = 0.1
+p2 = 0.2
 
 def get_xyz(q, p1, p2):
     A = np.zeros((64, 64))
@@ -37,6 +35,8 @@ dx = 4
 dy = 4
 dz = 4
 
+problem = qci.QProblem(qci.tr_z(get_xyz(q, p1, p2), dx, dy, dz), dx, dy, dz)
+
 
 penalties = ih.penalties
 tolerance = ih.tolerance
@@ -52,32 +52,19 @@ null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, 
 sig_lvl = ih.sig_lvl
 
 
-results = []
-df = pd.DataFrame()
 
-for i in range(len(p1_vals)):
-    results.append([])
-    for j in range(len(p2_vals)):
-        problem = qci.QProblem(qci.tr_z(get_xyz(q, p1_vals[i], p2_vals[j]), dx, dy, dz), dx, dy, dz)
-        res = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
-                         smoothing, damping, log_reg, n, null_fam, sig_lvl).result_message
-        if accurate_result == res[:len(accurate_result)]:
-            results[i].append('T')
-        else:
-            results[i].append('F')
+result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
+                         smoothing, damping, log_reg, n, null_fam, sig_lvl)
 
 
-#Make table
-for i in range(len(p1_vals)):
-    df.insert(df.shape[1], p1_vals[i], results[i])
+print(result.result_message)
 
-df = df.set_axis(p2_vals, axis = "index")
+entropies_list = []
+for candidate in result.candidate_entropies:
+    entropies_list.append(candidate[3])
 
-print(df)
+entropies_list.sort(reverse=True)
 
-tbl = plt.subplot(111, frame_on=False)
-tbl.xaxis.set_visible(False)
-tbl.yaxis.set_visible(False)
-table(tbl, df, loc="center")
-plt.savefig("noisy_latent_accuracy.png")
+plt.plot(np.arange(len(entropies_list)), entropies_list, 'ro')
+plt.savefig("noisy_latent_entropies.png")
 plt.show()
