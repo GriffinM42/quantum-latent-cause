@@ -10,7 +10,7 @@ A = np.zeros((64, 64))
 
 q = 0.4
 p1 = 0.1
-p2 = 0.2
+p2 = 0.1
 
 for x in range(0, 4):
     for y in range(0, 4):
@@ -38,7 +38,7 @@ dep_gate = ih.dep_gate
 extern_thresh = ih.extern_thresh
 entrop_thresh = ih.entrop_thresh
 
-n = ih.n
+n = 100#ih.n
 
 sig_lvl = ih.sig_lvl
 
