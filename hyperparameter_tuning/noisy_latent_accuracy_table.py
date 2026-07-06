@@ -38,7 +38,7 @@ dy = 4
 dz = 4
 
 
-penalties = np.arange(0.0, 1.1, 0.1)#ih.penalties
+penalties = ih.penalties
 tolerance = ih.tolerance
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
@@ -46,7 +46,7 @@ dep_gate = ih.dep_gate
 smoothing = ih.smoothing
 damping = ih.damping_noisy_lat
 log_reg = ih.log_reg_noisy_lat
-n = 100
+n = 100#ih.n
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = ih.sig_lvl

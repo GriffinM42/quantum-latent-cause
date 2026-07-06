@@ -55,6 +55,10 @@ def exp(A: np.NDArray[any]):
         print("Eigvecs: ", eigvecs)
         print("Eigvals: ", eigvals)
         print(A)
+        with open("log.txt", "w", encoding="utf-8") as f:
+            f.write("Eigvecs: ", eigvecs, "\n")
+            f.write("Eigvals: ", eigvals, "\n")
+            f.write(A)
         exit()
 
 # Related Objects

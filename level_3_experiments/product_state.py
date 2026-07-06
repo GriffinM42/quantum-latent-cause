@@ -24,7 +24,7 @@ def tomo_circ(get_circ):
     service = QiskitRuntimeService()
     backend = service.least_busy(simulator=False, operational=True)
     exp = StateTomography(get_circ())
-    data = exp.run(backend=backend, seed_simulation=10000).block_for_results()
+    data = exp.run(backend=backend).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
     return p_xy
