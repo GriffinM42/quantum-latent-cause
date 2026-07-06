@@ -21,11 +21,11 @@ def get_ghz_3():
 
 def tomo_circ(get_circ):
     aer = AerSimulator()
-    exp = StateTomography(get_circ())
-    data = exp.run(backend=aer, seed_simulation=10000).block_for_results()
+    exp = StateTomography(get_circ(), measurement_indices=[0, 1])
+    data = exp.run(backend=aer).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
-    return qci.tr_z(p_xy, 2, 2, 2)
+    return p_xy
 
 dx = 2
 dy = 2

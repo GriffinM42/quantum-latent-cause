@@ -21,7 +21,7 @@ def get_product_state():
 def tomo_circ(get_circ):
     aer = AerSimulator()
     exp = StateTomography(get_circ())
-    data = exp.run(backend=aer, seed_simulation=10000).block_for_results()
+    data = exp.run(backend=aer).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
     return p_xy

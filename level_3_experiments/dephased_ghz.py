@@ -24,11 +24,11 @@ def get_ghz_3():
 def tomo_circ(get_circ):
     service = QiskitRuntimeService()
     backend = service.least_busy(simulator=False, operational=True)
-    exp = StateTomography(get_circ())
+    exp = StateTomography(get_circ(), measurement_indices=[0, 1])
     data = exp.run(backend=backend).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
-    return qci.tr_z(p_xy, 2, 2, 2)
+    return p_xy
 
 dx = 2
 dy = 2
