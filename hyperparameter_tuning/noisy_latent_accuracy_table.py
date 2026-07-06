@@ -38,7 +38,7 @@ dy = 4
 dz = 4
 
 
-penalties = ih.penalties
+penalties = np.arange(0.0, 1.1, 0.1)#ih.penalties
 tolerance = ih.tolerance
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
@@ -46,7 +46,7 @@ dep_gate = ih.dep_gate
 smoothing = ih.smoothing
 damping = ih.damping_noisy_lat
 log_reg = ih.log_reg_noisy_lat
-n = ih.n
+n = 100
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = ih.sig_lvl
@@ -63,8 +63,10 @@ for i in range(len(p1_vals)):
                          smoothing, damping, log_reg, n, null_fam, sig_lvl).result_message
         if accurate_result == res[:len(accurate_result)]:
             results[i].append('T')
+            print(f"{p1_vals[i]}, {p2_vals[j]}: T")
         else:
             results[i].append('F')
+            print(f"{p1_vals[i]}, {p2_vals[j]}: F")
 
 
 #Make table

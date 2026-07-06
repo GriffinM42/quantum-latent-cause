@@ -49,7 +49,13 @@ def exp(A: np.NDArray[any]):
     """
     eigvals, eigvecs = lin.eig(A)
     eigvals = np.exp(eigvals)
-    return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
+    try:
+        return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
+    except:
+        print("Eigvecs: ", eigvecs)
+        print("Eigvals: ", eigvals)
+        print(A)
+        exit()
 
 # Related Objects
 class QProblem:
@@ -473,7 +479,11 @@ def initC(dx: int, dy: int, dz: int):
 
     #Condition on X and Y
     p_xy = tr_z(A, dx, dy, dz)
-    proj = np.kron(lin.pinv(sqrt(p_xy)), np.eye(dz))
+    try:
+        proj = np.kron(lin.pinv(sqrt(p_xy)), np.eye(dz))
+    except:
+        print("Problem initializing pseudo-random operator")
+        exit()
 
     return np.matmul(np.matmul(proj, A), proj)
 
