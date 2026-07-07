@@ -6,9 +6,9 @@ tolerance = 0.05
 entrop_thresh = 1
 extern_thresh = None
 dep_gate = 0.05
-smoothing = 0.01
-damping = 0.2
-log_reg = 0.2
+smoothing = 0.05
+damping = 0.9
+log_reg = 0.05
 n = 1000
 
 sig_lvl = 0.2

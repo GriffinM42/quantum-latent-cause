@@ -49,17 +49,8 @@ def exp(A: np.NDArray[any]):
     """
     eigvals, eigvecs = lin.eig(A)
     eigvals = np.exp(eigvals)
-    try:
-        return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
-    except:
-        print("Eigvecs: ", eigvecs)
-        print("Eigvals: ", eigvals)
-        print(A)
-        with open("log.txt", "w", encoding="utf-8") as f:
-            f.write("Eigvecs: ", eigvecs, "\n")
-            f.write("Eigvals: ", eigvals, "\n")
-            f.write(A)
-        exit()
+    return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
+    
 
 # Related Objects
 class QProblem:
@@ -483,11 +474,7 @@ def initC(dx: int, dy: int, dz: int):
 
     #Condition on X and Y
     p_xy = tr_z(A, dx, dy, dz)
-    try:
-        proj = np.kron(lin.pinv(sqrt(p_xy)), np.eye(dz))
-    except:
-        print("Problem initializing pseudo-random operator")
-        exit()
+    proj = np.kron(lin.pinv(sqrt(p_xy)), np.eye(dz))
 
     return np.matmul(np.matmul(proj, A), proj)
 
@@ -604,7 +591,20 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
     # and uses a seperate index
     witnesses = []
     for penalty in penalties:
-        p_xyz, mi, sz = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
+        i = 0
+        # Allow multiple attempts for SVD to converge
+        while True:
+            try:
+                p_xyz, mi, sz = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
+                break
+            except lin.LinAlgError:
+                i += 1
+                if i < 10:
+                    print("Error converging, resetting problem")
+                else:
+                    print("Repeated error converging. Quitting")
+                    quit()
+                
         witnesses.append((penalty, p_xyz, mi, sz))
 
     # Finds minimum markovizing entropy value
