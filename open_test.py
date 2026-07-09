@@ -43,7 +43,7 @@ penalties = ih.penalties
 tolerance = ih.tolerance
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
-dep_gate = 0.001#ih.dep_gate
+dep_gate = ih.dep_gate
 smoothing = ih.smoothing
 damping = ih.damping
 log_reg = ih.log_reg
@@ -57,14 +57,14 @@ result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_th
 
 print(result.result_message)
 
-print(qci.tr_xy(result.candidate_entropies[0][1], dx, dy, dz))
-print(lin.eig(qci.tr_xy(result.candidate_entropies[0][1], dx, dy, dz))[0])
-print(np.trace(result.candidate_entropies[0][1]))
+print(qci.tr_xy(result.candidate_entropies[0].state, dx, dy, dz))
+print(lin.eig(qci.tr_xy(result.candidate_entropies[0].state, dx, dy, dz))[0])
+print(np.trace(result.candidate_entropies[0].state))
 
 if result.candidate_entropies is not None and len(result.candidate_entropies) > 0:
     entropies_list = []
     for candidate in result.candidate_entropies:
-        entropies_list.append(candidate[3])
+        entropies_list.append(candidate.entrop_z)
 
     entropies_list.sort(reverse=True)
 

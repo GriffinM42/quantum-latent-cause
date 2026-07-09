@@ -61,9 +61,39 @@ class QProblem:
         self.dz = dz
 
 class QGraphResult:
-    def __init__(self, result_message: str, candidate_entropies: list[tuple[float, np.ndarray[any], float, float]]):
+    def __init__(self, result_message: str, candidate_entropies: list[QWitness],
+                 witnesses: list[QWitness]):
         self.result_message = result_message
         self.candidate_entropies = candidate_entropies
+        self.witnesses = witnesses
+
+        self.candidate_entropies.sort(key=lambda x:x.entrop_z)
+        self.witnesses.sort(key=lambda x:x.cmi)
+    
+    def get_optimal_witness(self):
+        if len(self.candidate_entropies) > 0:
+            return self.candidate_entropies[0]
+        else:
+            return None
+    
+    def get_min_cmi(self):
+        return self.witnesses[0].cmi
+
+    def get_max_cmi(self):
+        return self.witnesses[len(self.witnesses)-1].cmi
+    
+    def get_median_cmi(self):
+        return self.witnesses[math.floor(len(self.witnesses)/2)].cmi
+
+    def get_percent_markov(self):
+        return len(self.candidate_entropies)/len(self.witnesses)
+
+class QWitness:
+    def __init__(self, penalty, state, cmi, entrop_z):
+        self.penalty = penalty
+        self.state = state
+        self.cmi = cmi
+        self.entrop_z = entrop_z
 
 # Trace Operations
 def tr_x(p_xyz: np.NDArray[any], dx: int, dy: int, dz: int):
@@ -546,7 +576,7 @@ def QLatentSearch(problem: QProblem, smoothing: float, damping: float, log_reg: 
     condit_projector = np.kron(sqrt(smooth_esti), np.eye(dz))
     p_xyz = np.matmul(np.matmul(condit_projector, C_zlxy), condit_projector)
     
-    return p_xyz, mi_xylz(p_xyz, dx, dy, dz), vn_entropy(tr_xy(p_xyz, dx, dy, dz))
+    return QWitness(penalty, p_xyz, mi_xylz(p_xyz, dx, dy, dz), vn_entropy(tr_xy(p_xyz, dx, dy, dz)))
 
 # Common Entropy
 def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, smoothing: float, damping: float,
@@ -595,7 +625,7 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
         # Allow multiple attempts for SVD to converge
         while True:
             try:
-                p_xyz, mi, sz = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
+                witness = QLatentSearch(problem, smoothing, damping, log_reg, penalty, n)
                 break
             except lin.LinAlgError:
                 i += 1
@@ -605,19 +635,20 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
                     print("Repeated error converging. Quitting")
                     quit()
                 
-        witnesses.append((penalty, p_xyz, mi, sz))
+        witnesses.append(witness)
 
     # Finds minimum markovizing entropy value
     common_entropy = None
     candidates = []
-    for witness in witnesses:
-        if (witness[2] <= tolerance):
-            candidates.append(witness)
-            if((common_entropy is None) or (witness[3] < common_entropy[3])):
-                common_entropy = witness
-    candidates.sort(key=lambda x:x[3])
+    for witness_iter in witnesses:
+        if (witness_iter.cmi <= tolerance):
+            candidates.append(witness_iter)
+            if((common_entropy is None) or (witness_iter.entrop_z < common_entropy.entrop_z)):
+                common_entropy = witness_iter
+    candidates.sort(key=lambda x:x.entrop_z)
+    witnesses.sort(key=lambda x:x.cmi)
     
-    return common_entropy, candidates
+    return common_entropy, candidates, witnesses
 
 # Infer Graph
 def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
@@ -666,8 +697,6 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     esti_state = problem.esti_state
     dx = problem.dx
     dy = problem.dy
-
-    result_message = ""
     
     # Smooth the estimated state
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
@@ -675,17 +704,17 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     # Check if x and y have enough correlation to need explanation
     if abs(mi_xy(smooth_esti, dx, dy)) <= dep_gate:
         result_message = "not latent (too little dependence)"
-        return QGraphResult(result_message, None)
+        return QGraphResult(result_message, None, None)
     
     # Calculate quantum common entropy
-    common_entropy, candidates = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
+    common_entropy, candidates, witnesses = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
 
     # Calculate null family
     null_stat = []
     for prob in null_fam:
         c_entrop = QCommonEntropy(prob, penalties, tolerance, smoothing, damping, log_reg, n)[0]
         if c_entrop is not None:
-            null_stat.append(c_entrop[3])
+            null_stat.append(c_entrop.entrop_z)
     null_stat.sort()
 
     # Determin lower-tail threshold
@@ -698,15 +727,18 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         p_y = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
         extern_thresh = entrop_thresh * min(vn_entropy(p_x), vn_entropy(p_y))
     
+    result = QGraphResult("", candidates, witnesses)
+
     # Determine if threshold is held
-    if (common_entropy is not None) and (common_entropy[3] <= extern_thresh) and ((quantile is None) or (common_entropy[3] < quantile)):
-        result_message =  f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
+    if (common_entropy is not None) and (common_entropy.entrop_z <= extern_thresh) and ((quantile is None) or (common_entropy.entrop_z < quantile)):
+        result.result_message =  f"latent Markovizing witness\n"
     else:
-        result_message =  f"not latent (common entropy above threshold)"
-        result_message += f"\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""
-        result_message += f"\n% Markovizing: {len(candidates)/n}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""
+        result.result_message =  f"not latent (common entropy above threshold)\n"
+        
+    result.result_message += f"\npenalty: {result.get_optimal_witness().penalty}\nmi_xy|z: {result.get_optimal_witness().cmi}\ns_z: {result.get_optimal_witness().entrop_z}" if common_entropy is not None else ""
+    result.result_message += f"\n% Markovizing: {result.get_percent_markov()}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
     
-    return QGraphResult(result_message, candidates)
+    return result
     
 def getMinAlpha(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
                  smoothing: float, damping: float, log_reg: float, n: int, null_fam: list[QProblem], sig_lvl: float):
@@ -720,9 +752,9 @@ def getMinAlpha(problem: QProblem, penalties: list[float], tolerance: float, ent
     p_y = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
     entrop = min(vn_entropy(p_x), vn_entropy(p_y))
 
-    if result.candidate_entropies is None or len(result.candidate_entropies) < 1:
+    if result.get_optimal_witness() is None:
         return None
     else:
-        return result.candidate_entropies[0][3] / entrop
+        return result.get_optimal_witness().entrop_z / entrop
     
     
