@@ -702,10 +702,27 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     if (common_entropy is not None) and (common_entropy[3] <= extern_thresh) and ((quantile is None) or (common_entropy[3] < quantile)):
         result_message =  f"latent Markovizing witness\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}"
     else:
-        result_message =  f"not latent (common entropy above threshold){f"\n\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""}"
+        result_message =  f"not latent (common entropy above threshold)"
+        result_message += f"\npenalty: {common_entropy[0]}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""
+        result_message += f"\n% Markovizing: {len(candidates)/n}\nmi_xy|z: {common_entropy[2]}\ns_z: {common_entropy[3]}" if common_entropy is not None else ""
     
     return QGraphResult(result_message, candidates)
     
+def getMinAlpha(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
+                 smoothing: float, damping: float, log_reg: float, n: int, null_fam: list[QProblem], sig_lvl: float):
+    result = QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, smoothing, damping, log_reg, n, null_fam, sig_lvl)
+    
+    esti_state = problem.esti_state
+    dx = problem.dx
+    dy = problem.dy
 
+    p_x = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=1, axis2=3)
+    p_y = np.trace(esti_state.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
+    entrop = min(vn_entropy(p_x), vn_entropy(p_y))
+
+    if result.candidate_entropies is None or len(result.candidate_entropies) < 1:
+        return None
+    else:
+        return result.candidate_entropies[0][3] / entrop
     
     

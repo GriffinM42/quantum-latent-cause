@@ -10,8 +10,8 @@ import pandas as pd
 from pandas.plotting import table
 
 q = 0.4
-p1_vals = np.arange(0.1, 1.0, 0.1).round(decimals=1)
-p2_vals = np.arange(0.1, 1.0, 0.1).round(decimals=1)
+p1_vals = np.append(np.insert(np.arange(0.1, 1.0, 0.1).round(decimals=1), 0, 0.01), 0.99)
+p2_vals = np.append(np.insert(np.arange(0.1, 1.0, 0.1).round(decimals=1), 0, 0.01), 0.99)
 
 accurate_result = "latent Markovizing witness"
 
@@ -22,7 +22,7 @@ def get_xyz(q, p1, p2):
             for z in range(0, 4):
                 prod = 1
                 prod *= q if (z & 2) == 2 else (1-q)
-                prod *= q if (z & 1) == 2 else (1-q)
+                prod *= q if (z & 1) == 1 else (1-q)
                 prod *= p1 if ((z&2) != (x&2)) else (1-p1)
                 prod *= p1 if ((z&1) != (x&1)) else (1-p1)
                 prod *= p2 if ((z&2) != (y&2)) else (1-p2)
@@ -40,7 +40,7 @@ dz = 4
 
 penalties = ih.penalties
 tolerance = ih.tolerance
-entrop_thresh = ih.entrop_thresh
+entrop_thresh = 0.9#ih.entrop_thresh
 extern_thresh = ih.extern_thresh
 dep_gate = ih.dep_gate
 smoothing = ih.smoothing
@@ -59,14 +59,22 @@ for i in range(len(p1_vals)):
     results.append([])
     for j in range(len(p2_vals)):
         problem = qci.QProblem(qci.tr_z(get_xyz(q, p1_vals[i], p2_vals[j]), dx, dy, dz), dx, dy, dz)
-        res = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
-                         smoothing, damping, log_reg, n, null_fam, sig_lvl).result_message
-        if accurate_result == res[:len(accurate_result)]:
-            results[i].append('T')
-            print(f"{p1_vals[i]}, {p2_vals[j]}: T")
+        # res = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
+        #                  smoothing, damping, log_reg, n, null_fam, sig_lvl).result_message
+        # if accurate_result == res[:len(accurate_result)]:
+        #     results[i].append('T')
+        #     print(f"{p1_vals[i]}, {p2_vals[j]}: T")
+        # else:
+        #     results[i].append('F')
+        #     print(f"{p1_vals[i]}, {p2_vals[j]}: F")
+        alpha = qci.getMinAlpha(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
+                                smoothing, damping, log_reg, n, null_fam, sig_lvl)
+        if alpha is not None:
+            results[i].append((np.ceil(alpha*100)/100))
+            print(f"{p1_vals[i]}, {p2_vals[j]}: {(np.ceil(alpha*100)/100)}")
         else:
-            results[i].append('F')
-            print(f"{p1_vals[i]}, {p2_vals[j]}: F")
+            results[i].append(None)
+            print(f"{p1_vals[i]}, {p2_vals[j]}: {None}")
 
 
 #Make table
