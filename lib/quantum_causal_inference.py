@@ -745,13 +745,13 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
 
     # Determine if threshold is held
     if (common_entropy is not None) and (common_entropy.entrop_z <= extern_thresh) and ((quantile is None) or (common_entropy.entrop_z < quantile)):
-        result.result_message =  f"latent Markovizing witness\n"
+        result.result_message =  f"\nlatent Markovizing witness"
     else:
-        result.result_message =  f"not latent (common entropy above threshold)\n"
+        result.result_message =  f"\nnot latent (common entropy above threshold)"
         
-    result.result_message += f"\npenalty: {result.get_optimal_witness().penalty}\nmi_xy|z: {result.get_optimal_witness().cmi}\ns_z: {result.get_optimal_witness().entrop_z}" if common_entropy is not None else ""
-    result.result_message += f"\n% Markovizing: {result.get_percent_markov()}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
-    result.result_message += f"\nmin s_z: {result.get_min_entrop_z()}\nmedian s_z: {result.get_median_entrop_z()}\nmax s_z: {result.get_max_entrop_z()}"
+    result.result_message += f"\n\nOptimal Witness:\npenalty: {result.get_optimal_witness().penalty}\nmi_xy|z: {result.get_optimal_witness().cmi}\ns_z: {result.get_optimal_witness().entrop_z}" if common_entropy is not None else ""
+    result.result_message += f"\n\n% Markovizing: {result.get_percent_markov()}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
+    result.result_message += f"\n\nmin s_z: {result.get_min_entrop_z()}\nmedian s_z: {result.get_median_entrop_z()}\nmax s_z: {result.get_max_entrop_z()}"
     
     return result
     
