@@ -71,19 +71,33 @@ class QGraphResult:
         self.witnesses.sort(key=lambda x:x.cmi)
     
     def get_optimal_witness(self):
+        self.candidate_entropies.sort(key=lambda x:x.entrop_z)
         if len(self.candidate_entropies) > 0:
             return self.candidate_entropies[0]
         else:
             return None
     
     def get_min_cmi(self):
-        return self.witnesses[0].cmi
+        return min(self.witnesses, key=lambda x:x.cmi).cmi
 
     def get_max_cmi(self):
-        return self.witnesses[len(self.witnesses)-1].cmi
+        return max(self.witnesses, key=lambda x:x.cmi).cmi
     
     def get_median_cmi(self):
+        self.witnesses.sort(key=lambda x:x.cmi)
         return self.witnesses[math.floor(len(self.witnesses)/2)].cmi
+    
+    def get_min_entrop_z(self):
+        return min(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+
+    def get_max_entrop_z(self):
+        return max(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+    
+    def get_median_entrop_z(self):
+        self.witnesses.sort(key=lambda x:x.entrop_z)
+        med = self.witnesses[math.floor(len(self.witnesses)/2)].entrop_z
+        self.witnesses.sort(key=lambda x:x.cmi)
+        return med
 
     def get_percent_markov(self):
         return len(self.candidate_entropies)/len(self.witnesses)
@@ -737,6 +751,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         
     result.result_message += f"\npenalty: {result.get_optimal_witness().penalty}\nmi_xy|z: {result.get_optimal_witness().cmi}\ns_z: {result.get_optimal_witness().entrop_z}" if common_entropy is not None else ""
     result.result_message += f"\n% Markovizing: {result.get_percent_markov()}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
+    result.result_message += f"\nmin s_z: {result.get_min_entrop_z()}\nmedian s_z: {result.get_median_entrop_z()}\nmax s_z: {result.get_max_entrop_z()}"
     
     return result
     

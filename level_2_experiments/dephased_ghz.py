@@ -11,12 +11,13 @@ from qiskit_experiments.library import StateTomography
 from qiskit_aer import AerSimulator
 
 def get_ghz_3():
-    q = QuantumRegister(3)
-    b = ClassicalRegister(3)
+    q = QuantumRegister(4)
+    b = ClassicalRegister(4)
     circ = QuantumCircuit(q, b)
     circ.h(q[0])
     circ.cx(q[0], q[1])
     circ.cx(q[0], q[2])
+    circ.cx(q[0], q[3])
     return circ
 
 def tomo_circ(get_circ):
