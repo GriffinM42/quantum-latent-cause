@@ -49,7 +49,7 @@ print(result.result_message)
 
 entropies_list = []
 for candidate in result.candidate_entropies:
-    entropies_list.append(candidate[3])
+    entropies_list.append(candidate.entrop_z)
 
 entropies_list.sort(reverse=True)
 

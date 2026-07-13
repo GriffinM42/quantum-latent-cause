@@ -3,6 +3,7 @@ sys.path.insert(1, 'C:\\Users\\gevmo\\OneDrive\\Music\\Documents\\2026 - Summer\
 
 import lib.quantum_causal_inference as qci
 import lib.inference_hyperparams as ih
+import numpy as np
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -10,7 +11,10 @@ from qiskit import QuantumCircuit
 from qiskit.circuit import QuantumRegister, ClassicalRegister
 from qiskit_experiments.library import StateTomography
 
-import numpy as np
+ideal_state = np.array([[0.25, 0.25, 0.25, 0.25], 
+                       [0.25, 0.25, 0.25, 0.25], 
+                       [0.25, 0.25, 0.25, 0.25], 
+                       [0.25, 0.25, 0.25, 0.25]])
 
 def get_product_state():
     q = QuantumRegister(2)
@@ -36,6 +40,7 @@ dz = 2
 esti_state = tomo_circ(get_product_state)
 
 print(esti_state)
+print("Tomography trace distance: ", qci.trace_dist(esti_state, ideal_state))
 
 problem = qci.QProblem(esti_state, dx, dy, dz)
 

@@ -5,12 +5,16 @@ import lib.quantum_causal_inference as qci
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 import lib.inference_hyperparams as ih
+import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.circuit import QuantumRegister, ClassicalRegister
 from qiskit_experiments.library import StateTomography
 
-import numpy as np
+ideal_state = np.array([[0.5, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0], 
+                       [0, 0, 0, 0.5]])
 
 def get_ghz_3():
     q = QuantumRegister(4)
@@ -38,6 +42,7 @@ dz = 2
 esti_state = tomo_circ(get_ghz_3)
 
 print(esti_state)
+print("Tomography trace distance: ", qci.trace_dist(esti_state, ideal_state))
 
 problem = qci.QProblem(esti_state, dx, dy, dz)
 

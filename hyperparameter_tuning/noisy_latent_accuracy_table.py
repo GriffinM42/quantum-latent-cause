@@ -13,8 +13,6 @@ q = 0.4
 p1_vals = np.append(np.insert(np.arange(0.1, 1.0, 0.1).round(decimals=1), 0, 0.01), 0.99)
 p2_vals = np.append(np.insert(np.arange(0.1, 1.0, 0.1).round(decimals=1), 0, 0.01), 0.99)
 
-accurate_result = "latent Markovizing witness"
-
 def get_xyz(q, p1, p2):
     A = np.zeros((64, 64))
     for x in range(0, 4):

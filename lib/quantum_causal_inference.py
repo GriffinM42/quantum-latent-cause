@@ -50,6 +50,23 @@ def exp(A: np.NDArray[any]):
     eigvals, eigvecs = lin.eig(A)
     eigvals = np.exp(eigvals)
     return np.matmul(np.matmul(eigvecs, np.diag(eigvals)), lin.pinv(eigvecs))
+
+def trace_dist(A: np.NDArray[any], B: np.NDArray[any]):
+    """Calculates the trace distance of two matrices
+
+    Parameters
+    ----------
+    A : matrix
+    B: matrix
+
+    Returns
+    -------
+    float
+        trace distance D(A, B)
+    """
+    mat = A - B
+    mat_dag = np.conjugate(np.transpose(mat))
+    return 0.5 * np.trace(sqrt(np.matmul(mat_dag, mat)))
     
 
 # Related Objects
@@ -67,40 +84,62 @@ class QGraphResult:
         self.candidate_entropies = candidate_entropies
         self.witnesses = witnesses
 
-        self.candidate_entropies.sort(key=lambda x:x.entrop_z)
-        self.witnesses.sort(key=lambda x:x.cmi)
+        if self.candidate_entropies is not None:
+            self.candidate_entropies.sort(key=lambda x:x.entrop_z)
+        if self.witnesses is not None:
+            self.witnesses.sort(key=lambda x:x.cmi)
     
     def get_optimal_witness(self):
-        self.candidate_entropies.sort(key=lambda x:x.entrop_z)
-        if len(self.candidate_entropies) > 0:
-            return self.candidate_entropies[0]
+        if self.candidate_entropies is not None and len(self.candidate_entropies) > 0:
+            return min(self.candidate_entropies, key=lambda x:x.entrop_z)
         else:
             return None
     
     def get_min_cmi(self):
-        return min(self.witnesses, key=lambda x:x.cmi).cmi
+        if self.witnesses is not None:
+            return min(self.witnesses, key=lambda x:x.cmi).cmi
+        else:
+            return None
 
     def get_max_cmi(self):
-        return max(self.witnesses, key=lambda x:x.cmi).cmi
+        if self.witnesses is not None:
+            return max(self.witnesses, key=lambda x:x.cmi).cmi
+        else:
+            return None
     
     def get_median_cmi(self):
-        self.witnesses.sort(key=lambda x:x.cmi)
-        return self.witnesses[math.floor(len(self.witnesses)/2)].cmi
+        if self.witnesses is not None:
+            self.witnesses.sort(key=lambda x:x.cmi)
+            return self.witnesses[math.floor(len(self.witnesses)/2)].cmi
+        else:
+            return None
     
     def get_min_entrop_z(self):
-        return min(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+        if self.witnesses is not None:
+            return min(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+        else:
+            return None
 
     def get_max_entrop_z(self):
-        return max(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+        if self.witnesses is not None:
+            return max(self.witnesses, key=lambda x:x.entrop_z).entrop_z
+        else:
+            return None
     
     def get_median_entrop_z(self):
-        self.witnesses.sort(key=lambda x:x.entrop_z)
-        med = self.witnesses[math.floor(len(self.witnesses)/2)].entrop_z
-        self.witnesses.sort(key=lambda x:x.cmi)
-        return med
+        if self.witnesses is not None:
+            self.witnesses.sort(key=lambda x:x.entrop_z)
+            med = self.witnesses[math.floor(len(self.witnesses)/2)].entrop_z
+            self.witnesses.sort(key=lambda x:x.cmi)
+            return med
+        else:
+            return None
 
     def get_percent_markov(self):
-        return len(self.candidate_entropies)/len(self.witnesses)
+        if self.witnesses is not None:  
+            return len(self.candidate_entropies)/len(self.witnesses)
+        else:
+            return 0.0
 
 class QWitness:
     def __init__(self, penalty, state, cmi, entrop_z):
@@ -716,7 +755,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
     smooth_esti = ((1-smoothing) * esti_state) + ((smoothing/(dx*dy)) * np.eye(dx*dy))
 
     # Check if x and y have enough correlation to need explanation
-    if abs(mi_xy(smooth_esti, dx, dy)) <= dep_gate:
+    if mi_xy(smooth_esti, dx, dy) <= dep_gate:
         result_message = "not latent (too little dependence)"
         return QGraphResult(result_message, None, None)
     
@@ -750,7 +789,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         result.result_message =  f"\nnot latent (common entropy above threshold)"
         
     result.result_message += f"\n\nOptimal Witness:\npenalty: {result.get_optimal_witness().penalty}\nmi_xy|z: {result.get_optimal_witness().cmi}\ns_z: {result.get_optimal_witness().entrop_z}" if common_entropy is not None else ""
-    result.result_message += f"\n\n% Markovizing: {result.get_percent_markov()}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
+    result.result_message += f"\n\n% Markovizing: {result.get_percent_markov()*100}\nmin mi_xy|z: {result.get_min_cmi()}\nmedian mi_xy|z: {result.get_median_cmi()}\nmax mi_xy|z: {result.get_max_cmi()}"
     result.result_message += f"\n\nmin s_z: {result.get_min_entrop_z()}\nmedian s_z: {result.get_median_entrop_z()}\nmax s_z: {result.get_max_entrop_z()}"
     
     return result

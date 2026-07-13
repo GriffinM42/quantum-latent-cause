@@ -20,7 +20,7 @@ def get_xyz(q, p1, p2):
             for z in range(0, 4):
                 prod = 1
                 prod *= q if (z & 2) == 2 else (1-q)
-                prod *= q if (z & 1) == 2 else (1-q)
+                prod *= q if (z & 1) == 1 else (1-q)
                 prod *= p1 if ((z&2) != (x&2)) else (1-p1)
                 prod *= p1 if ((z&1) != (x&1)) else (1-p1)
                 prod *= p2 if ((z&2) != (y&2)) else (1-p2)
@@ -46,7 +46,7 @@ dep_gate = ih.dep_gate
 smoothing = ih.smoothing
 damping = ih.damping_noisy_lat
 log_reg = ih.log_reg_noisy_lat
-n = ih.n
+n = 100#ih.n
 
 null_fam = []#[qci.QProblem(esti_state3, dx, dy, dz), qci.QProblem(esti_state1, dx, dy, dz)]
 sig_lvl = ih.sig_lvl
@@ -61,7 +61,7 @@ print(result.result_message)
 
 entropies_list = []
 for candidate in result.candidate_entropies:
-    entropies_list.append(candidate[3])
+    entropies_list.append(candidate.entrop_z)
 
 entropies_list.sort(reverse=True)
 
