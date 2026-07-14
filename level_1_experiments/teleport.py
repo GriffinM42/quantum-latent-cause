@@ -6,6 +6,10 @@ import lib.inference_hyperparams as ih
 import numpy as np
 import math
 
+dx = 2
+dy = 2
+dz = 2
+
 esti_state = np.zeros((8, 8))
 
 a = math.sqrt(1/4)
@@ -29,25 +33,26 @@ for i in range(8):
         esti_state[i][j] = prod
 
 esti_state = 0.25 * esti_state
+esti_state = qci.tr_x(esti_state, dx, dy, dz)
 
-print(esti_state)
+problem = qci.QProblem(esti_state, dx, dy, dz)
 
-dx = 2
-dy = 2
-dz = 2
+penalties = ih.penalties
+tolerance = ih.tolerance
+entrop_thresh = ih.entrop_thresh
+extern_thresh = ih.extern_thresh
+dep_gate = ih.dep_gate
+smoothing = ih.smoothing
+damping = ih.damping
+log_reg = ih.log_reg
+n = ih.n
 
-p_xy = qci.tr_z(esti_state, 2, 2, 2)
+null_fam = []
+sig_lvl = ih.sig_lvl
 
-print(p_xy)
 
-p_x = np.trace(p_xy.reshape(dx, dy, dx, dy), axis1=1, axis2=3)
-p_y = np.trace(p_xy.reshape(dx, dy, dx, dy), axis1=0, axis2=2)
-p_z = qci.tr_xy(esti_state, dx, dy, dz)
-print(p_x)
-print(p_y)
-# print(qci.mi_xy(p_xy, 2, 2))
 
-print(qci.vn_entropy(p_x))
-print(qci.vn_entropy(p_y))
-print(qci.vn_entropy(p_z))
-print(qci.vn_entropy(qci.tr_y(esti_state, dx, dy, dz)) + qci.vn_entropy(qci.tr_z(esti_state, dx, dy, dz))-qci.vn_entropy(qci.tr_yz(esti_state, dx, dy, dz)) - qci.vn_entropy(esti_state))
+result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
+                         smoothing, damping, log_reg, n, null_fam, sig_lvl)
+
+print(result.result_message)
