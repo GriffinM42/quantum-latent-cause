@@ -633,7 +633,7 @@ def QLatentSearch(problem: QProblem, smoothing: float, damping: float, log_reg: 
 
 # Common Entropy
 def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, smoothing: float, damping: float,
-                    log_reg: float, n: int):
+                    log_reg: float, n: int, print_iter = False):
     """Heuristically calculates the common entropy for the joint state of systems x and y
 
     Parameters
@@ -654,6 +654,8 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
         The log regularization parameter to be used in QLatentSearch
     n: int
         The number of iterations that the QLatentSearch will perform to find a candidate witness
+    print_iter: boolean
+        Print each penalty value as its corresponding witness is calculated
 
     Returns
     -------
@@ -674,6 +676,9 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
     # and uses a seperate index
     witnesses = []
     for penalty in penalties:
+        if print_iter:
+            print(f'\r\33[KCurrent penalty: {penalty}', end='')
+
         i = 0
         # Allow multiple attempts for SVD to converge
         while True:
@@ -689,7 +694,8 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
                     quit()
                 
         witnesses.append(witness)
-
+    if print_iter:
+        print("\n")
     # Finds minimum markovizing entropy value
     common_entropy = None
     candidates = []
@@ -705,7 +711,7 @@ def QCommonEntropy(problem: QProblem, penalties: list[float], tolerance: float, 
 
 # Infer Graph
 def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, entrop_thresh: float, extern_thresh: float, dep_gate: float,
-                 smoothing: float, damping: float, log_reg: float, n: int, null_fam: list[QProblem], sig_lvl: float):
+                 smoothing: float, damping: float, log_reg: float, n: int, null_fam: list[QProblem], sig_lvl: float, print_iter = False):
     """Heuristically infers the causal structure of two observed quantum systems base on common 
     entropy (the minimum entropy of a Markovizing hidden common cause)
 
@@ -740,6 +746,8 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         Set of null calibration problems
     sig_lvl: float
         Lower tail significance level for null calibration
+        print_iter: boolean
+        Print each penalty value as its corresponding witness is calculated
 
     Returns
     -------
@@ -760,7 +768,7 @@ def QInferGraph(problem: QProblem, penalties: list[float], tolerance: float, ent
         return QGraphResult(result_message, None, None)
     
     # Calculate quantum common entropy
-    common_entropy, candidates, witnesses = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n)
+    common_entropy, candidates, witnesses = QCommonEntropy(problem, penalties, tolerance, smoothing, damping, log_reg, n, print_iter)
 
     # Calculate null family
     null_stat = []

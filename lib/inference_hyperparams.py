@@ -5,11 +5,11 @@ penalties = np.arange(0.0, 1.01, 0.01)
 tolerance = 0.05
 entrop_thresh = 1
 extern_thresh = None
-dep_gate = 0.001
+dep_gate = 0.01
 smoothing = 0.05
 damping = 0.9
 log_reg = 0.05
-n = 1000
+n = 100
 
 sig_lvl = 0.2
 
