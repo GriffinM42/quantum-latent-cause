@@ -57,6 +57,6 @@ null_fam = []
 sig_lvl = ih.sig_lvl
 
 result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
-                         smoothing, damping, log_reg, n, null_fam, sig_lvl)
+                         smoothing, damping, log_reg, n, null_fam, sig_lvl, True)
 
 print(result.result_message)

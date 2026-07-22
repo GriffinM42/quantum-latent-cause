@@ -14,7 +14,7 @@ from qiskit_aer import AerSimulator
 
 qb_x = 3
 qb_y = 3
-qb_z = 3
+qb_z = 2
 
 dx = int(math.exp2(qb_x))
 dy = int(math.exp2(qb_y))
@@ -34,7 +34,7 @@ def get_product_state():
 def tomo_circ(get_circ):
     aer = AerSimulator()
     exp = StateTomography(get_circ())
-    data = exp.run(backend=aer).block_for_results()
+    data = exp.run(backend=aer, shots=10000).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
     return p_xy
@@ -43,23 +43,26 @@ esti_state = tomo_circ(get_product_state)
 
 print(esti_state)
 print("Tomography trace distance: ", qci.trace_dist(esti_state, ideal_state))
+print("MI: ", qci.mi_xy(esti_state, dx, dy))
 
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = ih.penalties
-tolerance = ih.tolerance
+tolerance = ih.tolerance * (max(qb_x, qb_y))
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
-dep_gate = ih.dep_gate
+dep_gate = ih.dep_gate * (max(qb_x, qb_y))
 smoothing = ih.smoothing
-damping = ih.damping
+damping = 0.05
 log_reg = ih.log_reg
 n = ih.n
 
 null_fam = []
 sig_lvl = ih.sig_lvl
 
+print("Smooth MI: ", qci.mi_xy(((1-smoothing)*esti_state) + ((smoothing/(dx*dy))*np.eye(dx*dy)), dx, dy))
+
 result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
-                         smoothing, damping, log_reg, n, null_fam, sig_lvl)
+                         smoothing, damping, log_reg, n, null_fam, sig_lvl, True)
 
 print(result.result_message)

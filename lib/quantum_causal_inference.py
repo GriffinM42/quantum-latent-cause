@@ -475,7 +475,7 @@ def vn_entropy(p_c: np.NDArray[any]):
     vn = 0
     # Should we take the norm or just use the real component?
     for val in eigvals:
-        if val != 0:
+        if lin.norm(val) != 0:
             vn += -1 * lin.norm(val) * math.log(lin.norm(val), 2)
     
     return vn

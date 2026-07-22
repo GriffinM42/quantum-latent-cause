@@ -37,7 +37,7 @@ def get_ghz_3():
 def tomo_circ(get_circ):
     aer = AerSimulator()
     exp = StateTomography(get_circ(), measurement_indices=np.arange(0, qb_x + qb_y, 1).data)
-    data = exp.run(backend=aer).block_for_results()
+    data = exp.run(backend=aer, shots=10000).block_for_results()
     df = data.analysis_results(dataframe=True)
     p_xy = df['value'].values[0].data
     return p_xy
@@ -50,10 +50,10 @@ print("Tomography trace distance: ", qci.trace_dist(esti_state, ideal_state))
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = ih.penalties
-tolerance = ih.tolerance
+tolerance = ih.tolerance * (max(qb_x, qb_y)+1)
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
-dep_gate = ih.dep_gate
+dep_gate = ih.dep_gate * (max(qb_x, qb_y)+1)
 smoothing = ih.smoothing
 damping = ih.damping_ghz
 log_reg = ih.log_reg_ghz

@@ -51,10 +51,10 @@ print("Tomography trace distance: ", qci.trace_dist(esti_state, ideal_state))
 problem = qci.QProblem(esti_state, dx, dy, dz)
 
 penalties = ih.penalties
-tolerance = ih.tolerance
+tolerance = ih.tolerance + (max(qb_x, qb_y)+1) * ih.smoothing + 0.05
 entrop_thresh = ih.entrop_thresh
 extern_thresh = ih.extern_thresh
-dep_gate = ih.dep_gate
+dep_gate = ih.dep_gate + (max(qb_x, qb_y)+1) * ih.smoothing + 0.05
 smoothing = ih.smoothing
 damping = ih.damping
 log_reg = ih.log_reg
@@ -64,6 +64,6 @@ null_fam = []
 sig_lvl = ih.sig_lvl
 
 result = qci.QInferGraph(problem, penalties, tolerance, entrop_thresh, extern_thresh, dep_gate, 
-                         smoothing, damping, log_reg, n, null_fam, sig_lvl)
+                         smoothing, damping, log_reg, n, null_fam, sig_lvl, True)
 
 print(result.result_message)
